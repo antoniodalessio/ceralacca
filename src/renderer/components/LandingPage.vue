@@ -1,27 +1,40 @@
 <template>
   <div id="wrapper">
     <!-- <img id="logo" src="~@/assets/logo.png" alt="electron-vue"> -->
+    <!-- <system-information></system-information> -->
     <main>
       <div class="container">
-        <div class="preview">
-          {{ numbers.join("  ") }}
+        
+        <div class="preview-container">
+          <div class="preview">
+            <div class="preview-inner">
+              <ul class="preview-list">
+                <li v-for="item in numbers">
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <!-- <system-information></system-information> -->
-        <form class="insert-form"> 
-          <button class="btn-return" v-on:click="removeFromList">-</button>
-          <input type="number" class="input" v-model="currentNum" placeholder="">
-          <button class="btn-return" v-on:click="addToList">+</button>
-        </form>
+        
+        <div class="form-container">
+          <form class="insert-form"> 
+            <button class="btn-return" v-on:click="removeFromList">-</button>
+            <input type="number" class="input" v-model="currentNum" placeholder="">
+            <button class="btn-return" v-on:click="addToList">+</button>
+          </form>
+        </div>
 
-        <div>
+        <div class="overview-container">
           <ul class="overview">
-            <li v-for="item in all()" v-bind:class="{ selected: pastNumbers.indexOf(item) !== -1 }">
+            <li v-for="item in all()" v-bind:class="{ selected: numbers.indexOf(item) !== -1 }" @click="toggleNumber(item)">
               <span>
                 {{ item }}
               </span>
             </li>
           </ul>
         </div>
+
       </div>
     </main>
   </div>
@@ -38,9 +51,10 @@
         currentNum: null,
         numbers: [],
         pastNumbers: [],
+        maxPartecipants: 1000,
         all() {
           const numbers = [];
-          for (let i = 0; i < 1000; i += 1) {
+          for (let i = 0; i < this.maxPartecipants; i += 1) {
             numbers[i] = i + 1;
           }
           return numbers;
@@ -53,7 +67,14 @@
       },
       addToList() {
         const num = parseInt(this.currentNum, 0);
-        if (this.numbers.indexOf(num) === -1) {
+
+        const bool = (
+          !Number.isNaN(num) && num > 0
+          && num <= this.maxPartecipants
+          && this.numbers.indexOf(num) === -1
+        );
+
+        if (bool) {
           this.numbers.push(num);
           this.currentNum = null;
         }
@@ -62,11 +83,31 @@
       removeFromList() {
         const num = parseInt(this.currentNum, 0);
         const index = this.numbers.indexOf(num);
-        if (index !== -1) {
+
+        const bool = (
+          !Number.isNaN(num) && num > 0
+          && num <= this.maxPartecipants
+          && index !== -1
+        );
+
+        if (bool) {
           this.numbers.splice(index, 1);
           this.pastNumbers.push(num);
           this.currentNum = null;
         }
+      },
+      toggleNumber(num) {
+        num = parseInt(num, 0);
+        if (num > 0 && num <= this.maxPartecipants && this.numbers.indexOf(num) === -1) {
+          this.numbers.push(num);
+          this.currentNum = null;
+        } else {
+          const index = this.numbers.indexOf(num);
+          this.numbers.splice(index, 1);
+          this.pastNumbers.push(num);
+          this.currentNum = null;
+        }
+        this.numbers.sort((a, b) => a - b);
       },
     },
   };
@@ -87,6 +128,43 @@
     
   }
 
+  .preview-container {
+    height: 10vh;
+  }
+
+  .preview {
+    width: 10%;
+    height: 40px;
+    border: 1px solid #ccc;
+    margin: 20px auto;
+    overflow: hidden;
+    padding: 5px;
+  }
+
+  .preview-inner {
+    white-space: nowrap;
+    font-size: 20px;
+    padding: 2px;
+  }
+
+  .preview-list {
+    display: flex;
+    list-style: none;
+    flex-wrap: nowrap;
+  }
+
+  .preview-list li{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+    text-align: center;
+  }
+
+  .form-container {
+    height: 10vh;
+  }
+
   .insert-form {
     width: 200px;
     margin: 20px auto;
@@ -97,14 +175,8 @@
     font-size: 40px;
     height: 40px;
     width: 100px;
-  }
-
-  .preview {
-    width: 50%;
-    height: 40px;
-    font-size: 20px;
-    border: 1px solid black;
-    margin: 20px auto;
+    vertical-align: middle;
+    text-align: center;
   }
 
   .btn-return {
@@ -112,6 +184,12 @@
     height: 40px;
     line-height: 40px;
     font-size: 30px;
+    vertical-align: middle;
+  }
+
+  .overview-container {
+    height: 80vh;
+    overflow: scroll;
   }
 
   .overview {
@@ -130,6 +208,7 @@
     text-align: center;
     background-color: #ccc;
     border-radius: 20px;
+    cursor: pointer;
   }
 
   .overview li.selected {
