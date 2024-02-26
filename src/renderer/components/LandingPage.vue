@@ -4,11 +4,15 @@
     <!-- <system-information></system-information> -->
     <main>
       <div class="container">
+
+        <button class="btn-play" v-on:click="play">Play</button>
+        <button class="btn-play" v-on:click="pause">Pause</button>
+        <button class="btn-play" v-on:click="back">back</button>
         
         <div class="preview-container">
           <div class="preview">
-            <div class="preview-inner">
-              <ul class="preview-list">
+            <div class="preview-inner" id="previewInner">
+              <ul class="preview-list" ref="previewList" id="previewList" :style="{ left: listPosition+'px' }">
                 <li v-for="item in numbers">
                   {{ item }}
                 </li>
@@ -51,7 +55,9 @@
         currentNum: null,
         numbers: [],
         pastNumbers: [],
-        maxPartecipants: 1000,
+        maxPartecipants: 2500,
+        listPosition: 0,
+        interval: null,
         all() {
           const numbers = [];
           for (let i = 0; i < this.maxPartecipants; i += 1) {
@@ -61,9 +67,39 @@
         },
       };
     },
+    mounted() {
+      this.listPosition = document.getElementById('previewInner').offsetWidth;
+    },
     methods: {
+      onInit() {
+        clearInterval(this.interval);
+        this.interval = window.setInterval(this.onTick, 100);
+      },
+      onTick() {
+        const previewInner = document.getElementById('previewInner').offsetWidth;
+        const previewListWidth = document.getElementById('previewList').offsetWidth;
+        const previewListLeft = parseInt(document.getElementById('previewList').style.left, 0);
+        console.log(previewListWidth, previewListLeft, previewInner);
+
+        if (Math.abs(previewListLeft) >= previewListWidth) {
+          this.listPosition = previewInner;
+        }
+
+        this.listPosition -= 2;
+      },
       open(link) {
         this.$electron.shell.openExternal(link);
+      },
+      play() {
+        clearInterval(this.interval);
+        this.onInit();
+      },
+      pause() {
+        clearInterval(this.interval);
+      },
+      back() {
+        clearInterval(this.interval);
+        this.listPosition = document.getElementById('previewInner').offsetWidth;
       },
       addToList() {
         const num = parseInt(this.currentNum, 0);
@@ -78,7 +114,6 @@
           this.numbers.push(num);
           this.currentNum = null;
         }
-        this.numbers.sort((a, b) => a - b);
       },
       removeFromList() {
         const num = parseInt(this.currentNum, 0);
@@ -142,21 +177,23 @@
   }
 
   .preview-inner {
-    white-space: nowrap;
+    position: relative;
+    overflow-x: hidden;
     font-size: 20px;
     padding: 2px;
+    height: 100%;
   }
 
   .preview-list {
-    display: flex;
+    position: absolute;
+    left: 0;
+    top: 0;
     list-style: none;
-    flex-wrap: nowrap;
+    white-space: nowrap;
   }
 
   .preview-list li{
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
     margin-right: 5px;
     text-align: center;
   }
